@@ -1,0 +1,11 @@
+services:
+  vector-db:
+    image: pgvector/pgvector:pg17
+    ports:
+      - 5435:5432
+    environment:
+      - POSTGRES_USER=docker
+      - POSTGRES_PASSWORD=docker
+      - POSTGRES_DB=agents
+    volumes:
+      - ./docker/setup.sql:/docker-entrypoint-initdb.d/setup.sql
