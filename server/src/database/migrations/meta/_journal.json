@@ -8,6 +8,13 @@
       "when": 1751939527479,
       "tag": "0000_futuristic_patriot",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1752022534790,
+      "tag": "0001_cheerful_zeigeist",
+      "breakpoints": true
     }
   ]
 }
