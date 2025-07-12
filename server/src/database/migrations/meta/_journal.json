@@ -15,6 +15,13 @@
       "when": 1752022534790,
       "tag": "0001_cheerful_zeigeist",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1752198493213,
+      "tag": "0002_handy_speed",
+      "breakpoints": true
     }
   ]
 }

@@ -12,13 +12,16 @@ await seed(db, schema).refine((f) => {
         description: f.loremIpsum(),
       },
       with: {
-        questions: {
-          count: 20,
-          columns: {
-            question: f.loremIpsum(),
-            answer: f.loremIpsum(),
+        questions: [
+          {
+            weight: 1,
+            count: 20,
+            columns: {
+              question: f.loremIpsum(),
+              answer: f.loremIpsum(),
+            },
           },
-        },
+        ],
       },
     },
   };
