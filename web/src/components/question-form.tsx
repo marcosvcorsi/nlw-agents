@@ -1,4 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
+import type { GetQuestionsApiResponse } from "./question-list";
 
 // Esquema de validação no mesmo arquivo conforme solicitado
 const createQuestionSchema = z.object({
@@ -34,7 +36,59 @@ interface QuestionFormProps {
   roomId: string;
 }
 
+type CreateQuestionApiResponse = {
+  id: string;
+  answer: string | null;
+};
+
 export function QuestionForm({ roomId }: QuestionFormProps) {
+  const queryClient = useQueryClient();
+
+  const { mutateAsync: createQuestion } = useMutation({
+    mutationFn: async (data: CreateQuestionFormData) => {
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/rooms/${roomId}/questions`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(data),
+        }
+      );
+
+      const result: CreateQuestionApiResponse = await response.json();
+
+      return result;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["get-questions", roomId] });
+    },
+    onMutate: ({ question }) => {
+      const questions =
+        queryClient.getQueryData<GetQuestionsApiResponse[]>([
+          "get-questions",
+          roomId,
+        ]) || [];
+
+      queryClient.setQueryData(
+        ["get-questions", roomId],
+        [
+          {
+            id: crypto.randomUUID(),
+            question,
+            answer: null,
+            createdAt: new Date().toISOString(),
+          },
+          ...questions,
+        ]
+      );
+    },
+    onError: () => {
+      queryClient.invalidateQueries({ queryKey: ["get-questions", roomId] });
+    },
+  });
+
   const form = useForm<CreateQuestionFormData>({
     resolver: zodResolver(createQuestionSchema),
     defaultValues: {
@@ -42,10 +96,13 @@ export function QuestionForm({ roomId }: QuestionFormProps) {
     },
   });
 
-  function handleCreateQuestion(data: CreateQuestionFormData) {
-    // biome-ignore lint/suspicious/noConsole: dev
-    console.log(data, roomId);
+  async function handleCreateQuestion(data: CreateQuestionFormData) {
+    await createQuestion(data);
+
+    form.reset();
   }
+
+  const { isSubmitting } = form.formState;
 
   return (
     <Card>
@@ -70,6 +127,7 @@ export function QuestionForm({ roomId }: QuestionFormProps) {
                   <FormControl>
                     <Textarea
                       className="min-h-[100px]"
+                      disabled={isSubmitting}
                       placeholder="O que você gostaria de saber?"
                       {...field}
                     />
@@ -79,7 +137,9 @@ export function QuestionForm({ roomId }: QuestionFormProps) {
               )}
             />
 
-            <Button type="submit">Enviar pergunta</Button>
+            <Button disabled={isSubmitting} type="submit">
+              Enviar pergunta
+            </Button>
           </form>
         </Form>
       </CardContent>
